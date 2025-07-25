@@ -1,0 +1,15 @@
+.stripStyle {
+  position: relative;
+  display: inline-block;
+  border: 1px solid #D1D5DB;
+}
+
+.canvasStyle {
+  display: block;
+}
+
+.pointer {
+  position: absolute;
+  top: 50%;
+  transition: transform 0.15s ease-in-out;
+}
