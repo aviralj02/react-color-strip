@@ -182,3 +182,22 @@ export function createColorValue(color: string): ColorValue {
 
   return { hex, rgb, hsl };
 }
+
+/**
+ * Linearly interpolate between two colors
+ * @param from Starting hex color (e.g. "#ffffff")
+ * @param to Ending hex color (e.g. "#000000")
+ * @param t Interpolation value between 0 and 1
+ * @returns Interpolated hex color
+ */
+export function mixColors(from: string, to: string, t: number): string {
+  const fromRGB = hexToRgb(from);
+  const toRGB = hexToRgb(to);
+  if (!fromRGB || !toRGB) return from;
+
+  const r = fromRGB.r + (toRGB.r - fromRGB.r) * t;
+  const g = fromRGB.g + (toRGB.g - fromRGB.g) * t;
+  const b = fromRGB.b + (toRGB.b - fromRGB.b) * t;
+
+  return rgbToHex(r, g, b);
+}

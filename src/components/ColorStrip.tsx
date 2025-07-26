@@ -1,6 +1,12 @@
 import React, { useRef, useEffect, useState, FC } from "react";
 import { ColorStripProps, ColorValue } from "../types";
-import { createColorFromHue, getHueFromColor } from "../lib/utils";
+import {
+  createColorFromHue,
+  getHueFromColor,
+  hexToRgb,
+  mixColors,
+  rgbToHsl,
+} from "../lib/utils";
 import "../index.css";
 
 const ColorStrip: FC<ColorStripProps> = ({
@@ -10,6 +16,7 @@ const ColorStrip: FC<ColorStripProps> = ({
   disabled = false,
   pointer = {},
   style = {},
+  customColor,
   rounded = 0,
   onChange,
   onChangeComplete,
@@ -29,6 +36,11 @@ const ColorStrip: FC<ColorStripProps> = ({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [currentHue, setCurrentHue] = useState(() => getHueFromColor(value));
+  const [positionRatio, setPositionRatio] = useState(() => {
+    if (customColor) return 0.5;
+
+    return getHueFromColor(value) / 360;
+  });
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -42,23 +54,61 @@ const ColorStrip: FC<ColorStripProps> = ({
 
     const gradient = ctx.createLinearGradient(0, 0, width, 0);
 
-    for (let i = 0; i <= 360; i += 30) {
-      const hue = i % 360;
-      gradient.addColorStop(i / 360, `hsl(${hue}, 100%, 50%)`);
+    if (customColor) {
+      // Shades from white → customColor → black
+      gradient.addColorStop(0, "#ffffff");
+      gradient.addColorStop(0.5, customColor);
+      gradient.addColorStop(1, "#000000");
+    } else {
+      // Default hue gradient
+      for (let i = 0; i <= 360; i += 30) {
+        const hue = i % 360;
+        gradient.addColorStop(i / 360, `hsl(${hue}, 100%, 50%)`);
+      }
     }
 
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, width, height);
-  }, [width, height]);
+  }, [width, height, customColor]);
 
-  // Update hue when value prop changes
+  // When customColor changes, reset to center once
   useEffect(() => {
-    const newHue = getHueFromColor(value);
-    setCurrentHue(newHue);
-  }, [value]);
+    if (customColor) {
+      setPositionRatio(0.5);
+    }
+  }, [customColor]);
+
+  // When value changes and we're in hue mode, update hue & position
+  useEffect(() => {
+    if (!customColor) {
+      const newHue = getHueFromColor(value);
+      setCurrentHue(newHue);
+      setPositionRatio(newHue / 360);
+    }
+  }, [value, customColor]);
 
   const getColorFromPosition = (x: number): ColorValue => {
-    const hue = Math.max(0, Math.min(360, (x / width) * 360));
+    const ratio = Math.max(0, Math.min(1, x / width));
+
+    if (customColor) {
+      const mid = 0.5;
+
+      const mixedHex =
+        ratio < mid
+          ? mixColors("#ffffff", customColor, ratio / mid)
+          : mixColors(customColor, "#000000", (ratio - mid) / mid);
+
+      const rgb = hexToRgb(mixedHex)!;
+      const hsl = rgbToHsl(rgb.r, rgb.g, rgb.b);
+
+      return {
+        hex: mixedHex,
+        rgb,
+        hsl,
+      };
+    }
+
+    const hue = ratio * 360;
     return createColorFromHue(hue);
   };
 
@@ -72,8 +122,15 @@ const ColorStrip: FC<ColorStripProps> = ({
     if (!rect) return;
 
     const x = e.clientX - rect.left;
+    const ratio = Math.max(0, Math.min(1, x / width));
+    setPositionRatio(ratio);
+
     const color = getColorFromPosition(x);
-    setCurrentHue(color.hsl.h);
+
+    if (!customColor) {
+      setCurrentHue(color.hsl.h);
+    }
+
     onChange?.(color);
 
     (e.target as Element).setPointerCapture(e.pointerId);
@@ -88,8 +145,15 @@ const ColorStrip: FC<ColorStripProps> = ({
     if (!rect) return;
 
     const x = e.clientX - rect.left;
+    const ratio = Math.max(0, Math.min(1, x / width));
+    setPositionRatio(ratio);
+
     const color = getColorFromPosition(x);
-    setCurrentHue(color.hsl.h);
+
+    if (!customColor) {
+      setCurrentHue(color.hsl.h);
+    }
+
     onChange?.(color);
   };
 
@@ -102,7 +166,15 @@ const ColorStrip: FC<ColorStripProps> = ({
     if (!rect) return;
 
     const x = e.clientX - rect.left;
+    const ratio = Math.max(0, Math.min(1, x / width));
+    setPositionRatio(ratio);
+
     const color = getColorFromPosition(x);
+
+    if (!customColor) {
+      setCurrentHue(color.hsl.h);
+    }
+
     onChangeComplete?.(color);
 
     // Release pointer capture
@@ -112,36 +184,85 @@ const ColorStrip: FC<ColorStripProps> = ({
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (disabled) return;
 
-    let newHue = currentHue;
+    if (customColor) {
+      // === Custom shade mode ===
+      let newRatio = positionRatio;
 
-    switch (e.key) {
-      case "ArrowLeft":
-        e.preventDefault();
-        newHue = Math.max(0, currentHue - 1);
-        break;
-      case "ArrowRight":
-        e.preventDefault();
-        newHue = Math.min(360, currentHue + 1);
-        break;
-      case "Home":
-        e.preventDefault();
-        newHue = 0;
-        break;
-      case "End":
-        e.preventDefault();
-        newHue = 360;
-        break;
-      default:
-        return;
+      switch (e.key) {
+        case "ArrowLeft":
+          e.preventDefault();
+          newRatio = Math.max(0, positionRatio - 0.01);
+          break;
+        case "ArrowRight":
+          e.preventDefault();
+          newRatio = Math.min(1, positionRatio + 0.01);
+          break;
+        case "Home":
+          e.preventDefault();
+          newRatio = 0;
+          break;
+        case "End":
+          e.preventDefault();
+          newRatio = 1;
+          break;
+        default:
+          return;
+      }
+
+      setPositionRatio(newRatio);
+
+      const mid = 0.5;
+      const mixedHex =
+        newRatio < mid
+          ? mixColors("#ffffff", customColor, newRatio / mid)
+          : mixColors(customColor, "#000000", (newRatio - mid) / mid);
+
+      const rgb = hexToRgb(mixedHex)!;
+      const hsl = rgbToHsl(rgb.r, rgb.g, rgb.b);
+
+      const color: ColorValue = {
+        hex: mixedHex,
+        rgb,
+        hsl,
+      };
+
+      onChange?.(color);
+      onChangeComplete?.(color);
+    } else {
+      // === Hue mode ===
+      let newHue = currentHue;
+
+      switch (e.key) {
+        case "ArrowLeft":
+          e.preventDefault();
+          newHue = Math.max(0, currentHue - 1);
+          break;
+        case "ArrowRight":
+          e.preventDefault();
+          newHue = Math.min(360, currentHue + 1);
+          break;
+        case "Home":
+          e.preventDefault();
+          newHue = 0;
+          break;
+        case "End":
+          e.preventDefault();
+          newHue = 360;
+          break;
+        default:
+          return;
+      }
+
+      const color = createColorFromHue(newHue);
+      setCurrentHue(newHue);
+      onChange?.(color);
+      onChangeComplete?.(color);
     }
-
-    const color = createColorFromHue(newHue);
-    setCurrentHue(newHue);
-    onChange?.(color);
-    onChangeComplete?.(color);
   };
 
-  const pointerPosition = (currentHue / 360) * width;
+  const pointerPosition = customColor
+    ? positionRatio * width
+    : (currentHue / 360) * width;
 
   const transforms = [
     "translate(-50%, -50%)",
@@ -199,3 +320,12 @@ const ColorStrip: FC<ColorStripProps> = ({
 };
 
 export default ColorStrip;
+
+/* 🧠: Brain Dump
+- Color Strip component works with two modes:
+1. Hue Mode (when customColor is not passed)
+2. Shade mode (when customColor is passed)
+
+- When in Hue Mode, we handle the currentHue state
+- When in Shade Mode, we handle the positionRatio state
+*/

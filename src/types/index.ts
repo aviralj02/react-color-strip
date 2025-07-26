@@ -87,6 +87,10 @@ export interface ColorStripProps {
    */
   rounded?: React.CSSProperties["borderRadius"];
   /**
+   * Custom Color Strip
+   */
+  customColor?: string;
+  /**
    * Called when color changes during drag
    */
   onChange?: (color: ColorValue) => void;
