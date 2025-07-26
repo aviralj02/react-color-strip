@@ -19,6 +19,9 @@
   "author": "Aviral Jain",
   "license": "ISC",
   "description": "🎨 A minimal horizontal color picker strip component for React with draggable pointer support.",
+  "files": [
+    "dist"
+  ],
   "dependencies": {
     "react": "^18 || ^19",
     "react-dom": "^18 || ^19",
