@@ -11,11 +11,14 @@
   "keywords": [
     "color-picker",
     "color-strip",
-    "slider"
+    "slider",
+    "hue-slider",
+    "react-color-picker",
+    "color-strip-picker"
   ],
   "author": "Aviral Jain",
   "license": "ISC",
-  "description": "",
+  "description": "🎨 A minimal horizontal color picker strip component for React with draggable pointer support.",
   "dependencies": {
     "react": "^18 || ^19",
     "react-dom": "^18 || ^19",
@@ -35,5 +38,13 @@
     "rollup-plugin-postcss": "^4.0.2",
     "tslib": "^2.8.1",
     "typescript": "^5.8.3"
+  },
+  "peerDependencies": {
+    "react": "^18.0.0 || ^19.0.0",
+    "react-dom": "^18.0.0 || ^19.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/aviralj02/react-color-strip"
   }
 }
