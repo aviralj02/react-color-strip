@@ -20,7 +20,8 @@
   "license": "ISC",
   "description": "🎨 A minimal horizontal color picker strip component for React with draggable pointer support.",
   "files": [
-    "dist"
+    "dist",
+    "public/assets"
   ],
   "dependencies": {
     "react": "^18 || ^19",
@@ -48,6 +49,6 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/aviralj02/react-color-strip"
+    "url": "git+https://github.com/aviralj02/react-color-strip.git"
   }
 }
