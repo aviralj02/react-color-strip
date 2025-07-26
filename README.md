@@ -10,7 +10,18 @@ Supports both **Hue** and **Shade** modes with drag, keyboard, and accessibility
 | ![Hue Mode](./public/assets/HueMode.gif) | ![Shade Mode](./public/assets/ShadeMode.gif) |
 
 You can also use both modes side by side by rendering two separate components and managing their states independently:
+
 ![HueMode](./public/assets/MixedMode.gif)
+
+---
+
+### 📦 Installation
+
+```bash
+npm install react-color-strip
+# or
+yarn add react-color-strip
+```
 
 ---
 
@@ -24,14 +35,6 @@ You can also use both modes side by side by rendering two separate components an
 - ♿ Accessible: `aria-*` slider support
 
 ---
-
-### 📦 Installation
-
-```bash
-npm install react-color-strip
-# or
-yarn add react-color-strip
-```
 
 ### 🚀 Usage
 
