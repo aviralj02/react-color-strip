@@ -20,8 +20,7 @@
   "license": "ISC",
   "description": "🎨 A minimal horizontal color picker strip component for React with draggable pointer support.",
   "files": [
-    "dist",
-    "public/assets"
+    "dist"
   ],
   "dependencies": {
     "react": "^18 || ^19",
